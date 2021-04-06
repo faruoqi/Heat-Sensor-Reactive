@@ -1,6 +1,7 @@
 package sensors;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Random;
@@ -15,8 +16,19 @@ public class HeatSensor extends AbstractVerticle {
 
     @Override
     public void start(){
+        vertx.createHttpServer()
+                .requestHandler(this::handleRequest)
+                .listen(config().getInteger("http.port",3000));
         scheduleNextUpdate();
 
+    }
+
+    private void handleRequest(HttpServerRequest request) {
+        JsonObject data = new JsonObject().put("id",sensorId)
+                .put("temp",temperature);
+        request.response()
+                .putHeader("Content-Type", "application/json")
+                .end(data.encode());
     }
 
     private void scheduleNextUpdate(){
